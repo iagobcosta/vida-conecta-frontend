@@ -1,7 +1,11 @@
 import { useAuthStore } from '../stores/authStore'
 import type { BackendApiError } from '../types/api'
 
-const API_BASE = import.meta.env.VITE_API_URL ?? ''
+const API_BASE = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/$/, '')
+
+if (import.meta.env.PROD && !API_BASE) {
+  console.warn('VITE_API_URL não está definida. As chamadas da API vão para a mesma origem da Vercel.')
+}
 
 export class ApiError extends Error {
   readonly status: number

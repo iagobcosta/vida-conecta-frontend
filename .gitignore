@@ -7,6 +7,9 @@ dist-ssr
 build
 *.local
 
+# Vercel
+.vercel
+
 # Ambiente (versionar só o exemplo)
 .env
 .env.*

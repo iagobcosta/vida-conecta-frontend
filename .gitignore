@@ -1,3 +1,17 @@
+# Dependências
+node_modules/
+
+# Build
+dist
+dist-ssr
+build
+*.local
+
+# Ambiente (versionar só o exemplo)
+.env
+.env.*
+!.env.example
+
 # Logs
 logs
 *.log
@@ -7,18 +21,32 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Caches e cobertura
+.cache
+.vite
+*.tsbuildinfo
+coverage
+.nyc_output
+.eslintcache
+.stylelintcache
+.oxlintcache
 
-# Editor directories and files
+# Testes e2e
+playwright-report
+test-results
+blob-report
+
+# Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db

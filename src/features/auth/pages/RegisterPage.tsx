@@ -6,7 +6,9 @@ import { Alert } from '../../../components/Alert'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { Field, inputClassName } from '../../../components/Field'
+import { PasswordInput } from '../../../components/PasswordInput'
 import { errorMessage } from '../../../lib/errors'
+import { formatCpfInput, formatPhoneInput } from '../../../lib/formatters'
 import { queryKeys } from '../../../services/queryKeys'
 import { useAuthStore } from '../../../stores/authStore'
 import { fetchMe, register } from '../api'
@@ -59,7 +61,7 @@ export function RegisterPage() {
       setSession(tokens.token, user)
       await queryClient.invalidateQueries({ queryKey: queryKeys.me })
     },
-    onSuccess: () => navigate('/agenda', { replace: true }),
+    onSuccess: () => navigate('/inicio', { replace: true }),
   })
 
   return (
@@ -89,24 +91,38 @@ export function RegisterPage() {
           <input id="email" type="email" className={inputClassName} autoComplete="email" {...form.register('email')} />
         </Field>
         <Field id="password" label="Senha" hint="Mínimo de 8 caracteres" error={form.formState.errors.password?.message}>
-          <input
-            id="password"
-            type="password"
-            className={inputClassName}
-            autoComplete="new-password"
-            {...form.register('password')}
-          />
+          <PasswordInput id="password" autoComplete="new-password" {...form.register('password')} />
         </Field>
         {role === 'PACIENTE' ? (
           <>
             <Field id="cpf" label="CPF" error={form.formState.errors.cpf?.message}>
-              <input id="cpf" inputMode="numeric" className={inputClassName} {...form.register('cpf')} />
+              <input
+                id="cpf"
+                inputMode="numeric"
+                autoComplete="off"
+                className={inputClassName}
+                {...form.register('cpf', {
+                  onChange: (event) => {
+                    event.target.value = formatCpfInput(event.target.value)
+                  },
+                })}
+              />
             </Field>
             <Field id="birthDate" label="Data de nascimento" error={form.formState.errors.birthDate?.message}>
               <input id="birthDate" type="date" className={inputClassName} {...form.register('birthDate')} />
             </Field>
             <Field id="phone" label="Telefone (opcional)">
-              <input id="phone" type="tel" className={inputClassName} autoComplete="tel" {...form.register('phone')} />
+              <input
+                id="phone"
+                type="tel"
+                className={inputClassName}
+                autoComplete="tel"
+                {...form.register('phone', {
+                  onChange: (event) => {
+                    event.target.value = formatPhoneInput(event.target.value)
+                  },
+                })}
+              />
             </Field>
           </>
         ) : (

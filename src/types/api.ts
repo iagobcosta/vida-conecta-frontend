@@ -50,6 +50,36 @@ export type DoctorResponse = {
   specialty: string
 }
 
+export type DayOfWeek =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY'
+
+export type AvailabilityResponse = {
+  id: string
+  doctorId: string
+  dayOfWeek: DayOfWeek
+  startTime: string
+  endTime: string
+  slotMinutes: number
+}
+
+export type CreateAvailabilityRequest = {
+  dayOfWeek: DayOfWeek
+  startTime: string
+  endTime: string
+  slotMinutes: number
+}
+
+export type AvailableSlotResponse = {
+  startAt: string
+  durationMinutes: number
+}
+
 export type AppointmentResponse = {
   id: string
   patientId: string
@@ -59,6 +89,9 @@ export type AppointmentResponse = {
   scheduledAt: string
   durationMinutes: number
   status: AppointmentStatus
+  joinOpensAt: string
+  joinClosesAt: string
+  canJoinNow: boolean
 }
 
 export type CreateAppointmentRequest = {
@@ -70,7 +103,9 @@ export type CreateAppointmentRequest = {
 export type ConsentResponse = {
   id: string
   patientId: string
+  patientName: string | null
   doctorId: string
+  doctorName: string | null
   scope: ConsentScope
   appointmentId: string | null
   version: number
@@ -136,4 +171,14 @@ export type BackendApiError = {
   message: string
   path?: string
   details?: string[]
+}
+
+export type EhrAuditResponse = {
+  id: string
+  actorUserId: string
+  actorName: string | null
+  patientId: string
+  appointmentId: string | null
+  action: string
+  accessedAt: string
 }

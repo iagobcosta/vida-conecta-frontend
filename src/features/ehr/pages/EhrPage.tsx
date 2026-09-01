@@ -11,7 +11,7 @@ import { queryKeys } from '../../../services/queryKeys'
 import { useAuthStore } from '../../../stores/authStore'
 import { listAppointments } from '../../scheduling/api'
 import { listConsents } from '../../consent/api'
-import { listClinicalNotes } from '../api'
+import { listClinicalNotes, listEhrAudit } from '../api'
 import type { AppointmentResponse } from '../../../types/api'
 
 function uniquePatients(appointments: AppointmentResponse[]) {
@@ -46,6 +46,11 @@ export function EhrPage() {
     queryFn: () => listClinicalNotes(selectedPatientId as string),
     enabled: Boolean(selectedPatientId),
     retry: false,
+  })
+  const auditQuery = useQuery({
+    queryKey: queryKeys.ehrAudit(selectedPatientId ?? ''),
+    queryFn: () => listEhrAudit(selectedPatientId as string),
+    enabled: isPatient && Boolean(selectedPatientId),
   })
 
   const patients = uniquePatients(appointmentsQuery.data ?? [])
@@ -152,7 +157,7 @@ export function EhrPage() {
           <ul className="mt-3 space-y-2 text-sm text-slate-700">
             {consentsQuery.data?.map((consent) => (
               <li key={consent.id}>
-                {patientNames.get(consent.patientId) ?? `Paciente ${consent.patientId.slice(0, 8)}`} ·{' '}
+                {consent.patientName ?? patientNames.get(consent.patientId) ?? `Paciente ${consent.patientId.slice(0, 8)}`} ·{' '}
                 {consentScopeLabel(consent.scope)} ·{' '}
                 {consent.revokedAt ? 'revogado' : 'ativo'}
               </li>
@@ -172,6 +177,32 @@ export function EhrPage() {
           </Card>
         ))}
       </div>
+
+      {isPatient ? (
+        <section className="mt-10">
+          <h2 className="mb-3 text-lg font-semibold text-slate-900">Quem acessou</h2>
+          <p className="mb-4 text-sm text-slate-600">
+            Registro de leituras e gravações no seu prontuário. Isso ajuda a acompanhar o uso dos seus dados de saúde.
+          </p>
+          {auditQuery.isPending ? <Spinner label="Carregando auditoria" /> : null}
+          {auditQuery.isError ? <Alert variant="error">{errorMessage(auditQuery.error)}</Alert> : null}
+          {auditQuery.data?.length === 0 ? (
+            <EmptyState title="Nenhum acesso registrado ainda" />
+          ) : (
+            <ul className="space-y-2">
+              {auditQuery.data?.map((entry) => (
+                <li key={entry.id} className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm">
+                  <span className="font-medium text-slate-900">{entry.actorName ?? 'Usuário'}</span>
+                  {' · '}
+                  {entry.action === 'WRITE' ? 'registrou evolução' : 'leu o prontuário'}
+                  {' · '}
+                  <span className="text-slate-500">{formatDateTime(entry.accessedAt)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
     </div>
   )
 }

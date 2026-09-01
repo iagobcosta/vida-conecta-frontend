@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { Alert } from '../../../components/Alert'
 import { Badge } from '../../../components/Badge'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
+import { ConfirmDialog } from '../../../components/ConfirmDialog'
 import { EmptyState } from '../../../components/EmptyState'
 import { Field, inputClassName } from '../../../components/Field'
 import { PageHeader } from '../../../components/PageHeader'
@@ -14,6 +15,7 @@ import { Spinner } from '../../../components/Spinner'
 import { errorMessage } from '../../../lib/errors'
 import { consentScopeLabel, formatDateTime } from '../../../lib/formatters'
 import { queryKeys } from '../../../services/queryKeys'
+import { useToastStore } from '../../../stores/toastStore'
 import { listAppointments, listDoctors } from '../../scheduling/api'
 import { grantConsent, listConsents, revokeConsent } from '../api'
 
@@ -34,6 +36,8 @@ type FormValues = z.infer<typeof schema>
 
 export function ConsentsPage() {
   const queryClient = useQueryClient()
+  const pushToast = useToastStore((state) => state.push)
+  const [revokeId, setRevokeId] = useState<string | null>(null)
   const consentsQuery = useQuery({ queryKey: queryKeys.consents, queryFn: listConsents })
   const doctorsQuery = useQuery({ queryKey: queryKeys.doctors, queryFn: listDoctors })
   const appointmentsQuery = useQuery({ queryKey: queryKeys.appointments, queryFn: listAppointments })
@@ -63,12 +67,17 @@ export function ConsentsPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.consents })
       form.reset({ doctorId: '', scope: 'DOCTOR', appointmentId: '', expiresAt: '' })
+      pushToast('Consentimento concedido.')
     },
   })
 
   const revokeMutation = useMutation({
     mutationFn: revokeConsent,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.consents }),
+    onSuccess: async () => {
+      setRevokeId(null)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.consents })
+      pushToast('Consentimento revogado. O médico deixa de ver o histórico compartilhado.', 'info')
+    },
   })
 
   const relatedAppointments =
@@ -145,7 +154,7 @@ export function ConsentsPage() {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="font-medium text-slate-900">
-                        {doctorNames.get(consent.doctorId) ?? 'Médico'}
+                        {consent.doctorName ?? doctorNames.get(consent.doctorId) ?? 'Médico'}
                       </p>
                       <p className="mt-1 text-sm text-slate-600">
                         {consentScopeLabel(consent.scope)} · v{consent.version} · {formatDateTime(consent.grantedAt)}
@@ -158,8 +167,7 @@ export function ConsentsPage() {
                       className="mt-3"
                       size="sm"
                       variant="danger"
-                      disabled={revokeMutation.isPending}
-                      onClick={() => revokeMutation.mutate(consent.id)}
+                      onClick={() => setRevokeId(consent.id)}
                     >
                       Revogar
                     </Button>
@@ -170,6 +178,20 @@ export function ConsentsPage() {
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={Boolean(revokeId)}
+        title="Revogar consentimento?"
+        description="O médico deixa de ver o histórico compartilhado. As anotações que ele mesmo registrou continuam visíveis para ele."
+        confirmLabel="Revogar"
+        danger
+        busy={revokeMutation.isPending}
+        onCancel={() => setRevokeId(null)}
+        onConfirm={() => {
+          if (revokeId) {
+            revokeMutation.mutate(revokeId)
+          }
+        }}
+      />
     </div>
   )
 }

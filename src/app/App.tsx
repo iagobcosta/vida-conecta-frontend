@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { AppRoutes } from './router'
 import { AuthBootstrap } from './AuthBootstrap'
+import { ToastViewport } from '../components/ToastViewport'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +19,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthBootstrap>
+          <ToastViewport />
           <AppRoutes />
         </AuthBootstrap>
       </BrowserRouter>

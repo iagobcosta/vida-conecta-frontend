@@ -7,7 +7,7 @@ type LogoProps = {
 
 export function Logo({ light = false }: LogoProps) {
   return (
-    <Link to="/" className="inline-flex items-center gap-2 no-underline">
+    <Link to="/inicio" className="inline-flex items-center gap-2 no-underline">
       <span
         className={cn(
           'grid h-8 w-8 place-items-center rounded-lg text-sm font-bold',

@@ -16,7 +16,7 @@ export function RequireAuth() {
 export function GuestOnly() {
   const token = useAuthStore((state) => state.token)
   if (token) {
-    return <Navigate to="/agenda" replace />
+    return <Navigate to="/inicio" replace />
   }
   return <Outlet />
 }
@@ -27,7 +27,7 @@ export function RequireRole({ roles }: { roles: Role[] }) {
     return <Navigate to="/login" replace />
   }
   if (!roles.includes(user.role)) {
-    return <Navigate to="/agenda" replace />
+    return <Navigate to="/inicio" replace />
   }
   return <Outlet />
 }

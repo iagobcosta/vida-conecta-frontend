@@ -7,4 +7,8 @@ export const queryKeys = {
   ehr: (patientId: string, appointmentId?: string) =>
     appointmentId ? (['ehr', patientId, appointmentId] as const) : (['ehr', patientId] as const),
   prescriptions: ['prescriptions'] as const,
+  ehrAudit: (patientId: string) => ['ehr-audit', patientId] as const,
+  myAvailability: ['availability', 'me'] as const,
+  doctorAvailability: (doctorId: string) => ['availability', doctorId] as const,
+  doctorSlots: (doctorId: string) => ['slots', doctorId] as const,
 }

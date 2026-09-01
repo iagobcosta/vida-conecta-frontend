@@ -6,6 +6,7 @@ import { Alert } from '../../../components/Alert'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { Field, inputClassName } from '../../../components/Field'
+import { PasswordInput } from '../../../components/PasswordInput'
 import { errorMessage } from '../../../lib/errors'
 import { queryKeys } from '../../../services/queryKeys'
 import { useAuthStore } from '../../../stores/authStore'
@@ -29,7 +30,7 @@ export function LoginPage() {
       setSession(tokens.token, user)
       await queryClient.invalidateQueries({ queryKey: queryKeys.me })
     },
-    onSuccess: () => navigate('/agenda', { replace: true }),
+    onSuccess: () => navigate('/inicio', { replace: true }),
   })
 
   return (
@@ -48,13 +49,7 @@ export function LoginPage() {
           />
         </Field>
         <Field id="password" label="Senha" error={form.formState.errors.password?.message}>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            className={inputClassName}
-            {...form.register('password')}
-          />
+          <PasswordInput id="password" autoComplete="current-password" {...form.register('password')} />
         </Field>
         <Button type="submit" className="w-full" disabled={mutation.isPending}>
           {mutation.isPending ? 'Entrando…' : 'Entrar'}

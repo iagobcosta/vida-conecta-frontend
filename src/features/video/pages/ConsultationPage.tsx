@@ -10,10 +10,11 @@ import { Field, inputClassName } from '../../../components/Field'
 import { PageHeader } from '../../../components/PageHeader'
 import { Spinner } from '../../../components/Spinner'
 import { errorMessage, isApiError } from '../../../lib/errors'
-import { formatDateTime } from '../../../lib/formatters'
+import { formatDateTime, joinWindowLabel } from '../../../lib/formatters'
 import { queryKeys } from '../../../services/queryKeys'
 import { useAuthStore } from '../../../stores/authStore'
-import { getAppointment } from '../../scheduling/api'
+import { useToastStore } from '../../../stores/toastStore'
+import { getAppointment, completeAppointment } from '../../scheduling/api'
 import { createClinicalNote, listClinicalNotes } from '../../ehr/api'
 import { createPrescription, listPrescriptions } from '../../prescription/api'
 import { requestVideoToken } from '../api'
@@ -24,6 +25,7 @@ export function ConsultationPage() {
   const user = useAuthStore((state) => state.user)
   const isDoctor = user?.role === 'MEDICO'
   const queryClient = useQueryClient()
+  const pushToast = useToastStore((state) => state.push)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [previewError, setPreviewError] = useState<string | null>(null)
@@ -54,12 +56,16 @@ export function ConsultationPage() {
     queryFn: listPrescriptions,
   })
 
-  const tokenMutation = useMutation({ mutationFn: () => requestVideoToken(appointmentId) })
+  const tokenMutation = useMutation({
+    mutationFn: () => requestVideoToken(appointmentId),
+    onSuccess: () => pushToast('Token da sala emitido (mock).'),
+  })
   const noteMutation = useMutation({
     mutationFn: () => createClinicalNote(patientId as string, { appointmentId, content: note.trim() }),
     onSuccess: async () => {
       setNote('')
       await queryClient.invalidateQueries({ queryKey: ['ehr'] })
+      pushToast('Evolução registrada.')
     },
   })
   const rxMutation = useMutation({
@@ -74,6 +80,15 @@ export function ConsultationPage() {
       setDosage('')
       setInstructions('')
       await queryClient.invalidateQueries({ queryKey: queryKeys.prescriptions })
+      pushToast('Receita emitida.')
+    },
+  })
+  const completeMutation = useMutation({
+    mutationFn: () => completeAppointment(appointmentId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.appointments })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.appointment(appointmentId) })
+      pushToast('Consulta concluída.')
     },
   })
 
@@ -138,9 +153,31 @@ export function ConsultationPage() {
               <p className="mt-1 text-lg font-semibold text-slate-900">
                 {isDoctor ? appointment.patientName : appointment.doctorName}
               </p>
+              <p className="mt-2 text-sm text-slate-600">
+                {joinWindowLabel(
+                  appointment.joinOpensAt,
+                  appointment.joinClosesAt,
+                  appointment.canJoinNow,
+                  appointment.status === 'CONFIRMED' || appointment.status === 'IN_PROGRESS',
+                )}
+              </p>
             </div>
             <AppointmentStatusBadge status={appointment.status} />
           </div>
+          {isDoctor && (appointment.status === 'CONFIRMED' || appointment.status === 'IN_PROGRESS') ? (
+            <Button
+              className="mt-4"
+              size="sm"
+              variant="secondary"
+              disabled={completeMutation.isPending}
+              onClick={() => completeMutation.mutate()}
+            >
+              {completeMutation.isPending ? 'Encerrando…' : 'Concluir consulta'}
+            </Button>
+          ) : null}
+          {completeMutation.isError ? (
+            <Alert variant="error" className="mt-3">{errorMessage(completeMutation.error)}</Alert>
+          ) : null}
         </Card>
       ) : null}
 
@@ -169,7 +206,7 @@ export function ConsultationPage() {
                 Ligar câmera local
               </Button>
             )}
-            <Button onClick={() => tokenMutation.mutate()} disabled={tokenMutation.isPending}>
+            <Button onClick={() => tokenMutation.mutate()} disabled={tokenMutation.isPending || Boolean(appointment && !appointment.canJoinNow)}>
               {tokenMutation.isPending ? 'Pedindo token…' : 'Pedir token da sala'}
             </Button>
           </div>

@@ -1,5 +1,5 @@
 import { apiClient } from '../../services/apiClient'
-import type { ClinicalNoteResponse, CreateClinicalNoteRequest } from '../../types/api'
+import type { ClinicalNoteResponse, CreateClinicalNoteRequest, EhrAuditResponse } from '../../types/api'
 
 export function listClinicalNotes(patientId: string, appointmentId?: string) {
   const query = appointmentId ? `?appointmentId=${encodeURIComponent(appointmentId)}` : ''
@@ -11,4 +11,8 @@ export function createClinicalNote(patientId: string, payload: CreateClinicalNot
     method: 'POST',
     body: payload,
   })
+}
+
+export function listEhrAudit(patientId: string) {
+  return apiClient<EhrAuditResponse[]>(`/api/v1/ehr/audit?patientId=${encodeURIComponent(patientId)}`)
 }

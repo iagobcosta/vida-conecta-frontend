@@ -6,6 +6,7 @@ import { roleLabel } from '../lib/formatters'
 import { useAuthStore } from '../stores/authStore'
 
 const patientLinks = [
+  { to: '/inicio', label: 'Início' },
   { to: '/agenda', label: 'Agenda' },
   { to: '/consentimentos', label: 'Consentimentos' },
   { to: '/prontuario', label: 'Meu prontuário' },
@@ -13,7 +14,9 @@ const patientLinks = [
 ]
 
 const doctorLinks = [
+  { to: '/inicio', label: 'Início' },
   { to: '/agenda', label: 'Agenda' },
+  { to: '/horarios', label: 'Meus horários' },
   { to: '/prontuario', label: 'Prontuário' },
   { to: '/receitas', label: 'Receitas' },
 ]
@@ -51,6 +54,7 @@ export function AppLayout() {
                     isActive ? 'bg-teal-50 text-teal-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
                   )
                 }
+                end={link.to === '/inicio'}
               >
                 {link.label}
               </NavLink>
@@ -71,6 +75,7 @@ export function AppLayout() {
             <NavLink
               key={link.to}
               to={link.to}
+              end={link.to === '/inicio'}
               className={({ isActive }) =>
                 cn(
                   'whitespace-nowrap rounded-lg px-3 py-1.5 text-sm',

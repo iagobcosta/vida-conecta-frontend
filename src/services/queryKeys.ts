@@ -13,4 +13,8 @@ export const queryKeys = {
   doctorSlots: (doctorId: string) => ['slots', doctorId] as const,
   notifications: ['notifications'] as const,
   unreadNotifications: ['notifications', 'unread'] as const,
+  doctorInvite: (token: string) => ['doctor-invite', token] as const,
+  adminDoctors: ['admin', 'doctors'] as const,
+  adminInvites: ['admin', 'invites'] as const,
+  adminBootstrapToken: ['admin', 'bootstrap-token'] as const,
 }

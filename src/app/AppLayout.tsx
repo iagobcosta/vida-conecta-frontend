@@ -22,11 +22,16 @@ const doctorLinks = [
   { to: '/receitas', label: 'Receitas' },
 ]
 
+const adminLinks = [
+  { to: '/inicio', label: 'Início' },
+  { to: '/medicos', label: 'Médicos' },
+]
+
 export function AppLayout() {
   const user = useAuthStore((state) => state.user)
   const clearSession = useAuthStore((state) => state.clearSession)
   const navigate = useNavigate()
-  const links = user?.role === 'MEDICO' ? doctorLinks : patientLinks
+  const links = user?.role === 'MEDICO' ? doctorLinks : user?.role === 'ADMIN' ? adminLinks : patientLinks
 
   function logout() {
     clearSession()
@@ -91,11 +96,6 @@ export function AppLayout() {
         </nav>
       </header>
       <main id="conteudo" className="mx-auto max-w-6xl px-4 py-8">
-        {user?.role === 'ADMIN' ? (
-          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            O painel administrativo não faz parte deste MVP. Use uma conta de paciente ou médico.
-          </p>
-        ) : null}
         <Outlet />
       </main>
     </div>

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Alert } from '../../../components/Alert'
 import { AppointmentStatusBadge } from '../../../components/Badge'
 import { Button } from '../../../components/Button'
@@ -26,12 +26,20 @@ function nextAppointment(appointments: AppointmentResponse[]) {
 
 export function HomePage() {
   const user = useAuthStore((state) => state.user)
+  const location = useLocation()
+  const nextBootstrapToken = (location.state as { nextBootstrapToken?: string } | null)?.nextBootstrapToken
   const isPatient = user?.role === 'PACIENTE'
   const isDoctor = user?.role === 'MEDICO'
-  const appointmentsQuery = useQuery({ queryKey: queryKeys.appointments, queryFn: listAppointments })
+  const isAdmin = user?.role === 'ADMIN'
+  const appointmentsQuery = useQuery({
+    queryKey: queryKeys.appointments,
+    queryFn: listAppointments,
+    enabled: !isAdmin,
+  })
   const consentsQuery = useQuery({
     queryKey: queryKeys.consents,
     queryFn: listConsents,
+    enabled: isPatient,
   })
 
   const upcoming = nextAppointment(appointmentsQuery.data ?? [])
@@ -51,6 +59,12 @@ export function HomePage() {
         description={`${roleLabel(user?.role ?? 'PACIENTE')} · ${user?.email}`}
       />
 
+      {nextBootstrapToken ? (
+        <Alert className="mb-6" variant="success">
+          Guarde o próximo token de cadastro de admin: <span className="break-all font-mono text-sm">{nextBootstrapToken}</span>
+        </Alert>
+      ) : null}
+
       {user?.cpf ? (
         <Alert className="mb-6">
           CPF na conta: {user.cpf}. O número completo fica só no servidor, mascarado nesta tela.
@@ -60,6 +74,34 @@ export function HomePage() {
       {appointmentsQuery.isPending ? <Spinner label="Carregando início" /> : null}
       {appointmentsQuery.isError ? <Alert variant="error">{errorMessage(appointmentsQuery.error)}</Alert> : null}
 
+      {isAdmin ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <p className="text-sm font-medium text-slate-500">Equipe médica</p>
+            <p className="mt-2 text-sm text-slate-600">
+              Convide médicos pelo nome e e-mail. Eles recebem o link para concluir o cadastro.
+            </p>
+            <Link to="/medicos" className="mt-4 inline-block">
+              <Button size="sm">Gerenciar médicos</Button>
+            </Link>
+          </Card>
+          <Card>
+            <p className="text-sm font-medium text-slate-500">Atalhos</p>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li>
+                <Link to="/medicos" className="font-medium text-teal-800 hover:underline">
+                  Convidar médico
+                </Link>
+              </li>
+              <li>
+                <Link to="/notificacoes" className="font-medium text-teal-800 hover:underline">
+                  Notificações
+                </Link>
+              </li>
+            </ul>
+          </Card>
+        </div>
+      ) : (
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <p className="text-sm font-medium text-slate-500">Próxima consulta</p>
@@ -160,6 +202,7 @@ export function HomePage() {
           ) : null}
         </Card>
       </div>
+      )}
     </div>
   )
 }

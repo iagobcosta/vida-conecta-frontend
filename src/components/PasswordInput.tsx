@@ -18,7 +18,7 @@ export function PasswordInput({ id, autoComplete, className, ...props }: Passwor
       />
       <button
         type="button"
-        className="absolute inset-y-0 right-2 text-sm font-medium text-teal-800"
+        className="absolute inset-y-0 right-2 cursor-pointer text-sm font-medium text-teal-800"
         onClick={() => setVisible((value) => !value)}
         aria-pressed={visible}
       >

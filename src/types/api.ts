@@ -29,13 +29,66 @@ export type MeResponse = {
 export type RegisterRequest = {
   email: string
   password: string
-  role: Exclude<Role, 'ADMIN'>
+  role: 'PACIENTE'
   fullName: string
   cpf?: string
   birthDate?: string
   phone?: string
-  crm?: string
-  specialty?: string
+}
+
+export type RegisterAdminRequest = {
+  token: string
+  email: string
+  password: string
+  fullName: string
+}
+
+export type AdminRegisterResponse = {
+  token: string
+  tokenType: string
+  nextBootstrapToken: string
+}
+
+export type CompleteDoctorRequest = {
+  token: string
+  password: string
+  crm: string
+  specialty: string
+}
+
+export type InviteDoctorRequest = {
+  email: string
+  fullName: string
+}
+
+export type DoctorInviteResponse = {
+  id: string
+  email: string
+  fullName: string
+  token: string | null
+  inviteUrl: string | null
+  status: 'PENDING' | 'ACCEPTED' | 'EXPIRED'
+  expiresAt: string
+  acceptedAt: string | null
+  createdAt: string
+}
+
+export type DoctorInvitePreviewResponse = {
+  email: string
+  fullName: string
+  expiresAt: string
+}
+
+export type ManagedDoctorResponse = {
+  id: string
+  email: string | null
+  fullName: string
+  crm: string
+  specialty: string
+}
+
+export type BootstrapTokenResponse = {
+  token: string
 }
 
 export type LoginRequest = {

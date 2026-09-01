@@ -4,6 +4,9 @@ import { AuthLayout } from './AuthLayout'
 import { GuestOnly, RequireAuth, RequireRole } from './guards'
 import { LoginPage } from '../features/auth/pages/LoginPage'
 import { RegisterPage } from '../features/auth/pages/RegisterPage'
+import { AdminRegisterPage } from '../features/auth/pages/AdminRegisterPage'
+import { CompleteDoctorPage } from '../features/auth/pages/CompleteDoctorPage'
+import { DoctorsAdminPage } from '../features/admin/pages/DoctorsAdminPage'
 import { AgendaPage } from '../features/scheduling/pages/AgendaPage'
 import { AvailabilityPage } from '../features/scheduling/pages/AvailabilityPage'
 import { NewAppointmentPage } from '../features/scheduling/pages/NewAppointmentPage'
@@ -21,6 +24,8 @@ export function AppRoutes() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/cadastro" element={<RegisterPage />} />
+          <Route path="/cadastro/admin" element={<AdminRegisterPage />} />
+          <Route path="/cadastro/medico" element={<CompleteDoctorPage />} />
         </Route>
       </Route>
 
@@ -36,6 +41,9 @@ export function AppRoutes() {
           </Route>
           <Route element={<RequireRole roles={['MEDICO']} />}>
             <Route path="/horarios" element={<AvailabilityPage />} />
+          </Route>
+          <Route element={<RequireRole roles={['ADMIN']} />}>
+            <Route path="/medicos" element={<DoctorsAdminPage />} />
           </Route>
           <Route path="/prontuario" element={<EhrPage />} />
           <Route path="/receitas" element={<PrescriptionsPage />} />

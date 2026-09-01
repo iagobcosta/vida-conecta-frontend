@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom'
 import { Alert } from '../../../components/Alert'
 import { AppointmentStatusBadge } from '../../../components/Badge'
 import { Button } from '../../../components/Button'
+import { CancelAppointmentDialog } from '../../../components/CancelAppointmentDialog'
 import { Card } from '../../../components/Card'
-import { ConfirmDialog } from '../../../components/ConfirmDialog'
 import { EmptyState } from '../../../components/EmptyState'
 import { PageHeader } from '../../../components/PageHeader'
 import { Spinner } from '../../../components/Spinner'
@@ -48,15 +48,17 @@ export function AgendaPage() {
     mutationFn: confirmAppointment,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.appointments })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.unreadNotifications })
       pushToast('Consulta confirmada. A sala abre na janela do horário.')
     },
   })
   const cancelMutation = useMutation({
-    mutationFn: cancelAppointment,
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => cancelAppointment(id, reason),
     onSuccess: async () => {
       setCancelId(null)
       await queryClient.invalidateQueries({ queryKey: queryKeys.appointments })
-      pushToast('Consulta cancelada.', 'info')
+      await queryClient.invalidateQueries({ queryKey: queryKeys.unreadNotifications })
+      pushToast(isDoctor ? 'Consulta cancelada. O paciente foi notificado.' : 'Consulta cancelada.', 'info')
     },
   })
 
@@ -149,6 +151,12 @@ export function AgendaPage() {
                       confirmed,
                     )}
                   </p>
+                  {appointment.status === 'CANCELLED' && appointment.cancelReason ? (
+                    <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                      Cancelada por {appointment.cancelledByName ?? 'um participante'}. Motivo:{' '}
+                      {appointment.cancelReason}
+                    </p>
+                  ) : null}
                 </div>
                 <AppointmentStatusBadge status={appointment.status} />
               </div>
@@ -173,23 +181,29 @@ export function AgendaPage() {
                     Cancelar
                   </Button>
                 ) : null}
+                {isPatient && appointment.status === 'CANCELLED' ? (
+                  <Link to={`/agenda/nova?medico=${appointment.doctorId}`}>
+                    <Button size="sm" variant="secondary">
+                      Reagendar
+                    </Button>
+                  </Link>
+                ) : null}
               </div>
             </Card>
           )
         })}
       </div>
 
-      <ConfirmDialog
+      <CancelAppointmentDialog
+        key={cancelId ?? 'closed'}
         open={Boolean(cancelId)}
-        title="Cancelar consulta?"
-        description="O horário será liberado e a sala não poderá ser aberta."
-        confirmLabel="Cancelar consulta"
-        danger
+        requireReason={isDoctor}
         busy={cancelMutation.isPending}
-        onCancel={() => setCancelId(null)}
-        onConfirm={() => {
+        error={cancelMutation.isError ? errorMessage(cancelMutation.error) : undefined}
+        onClose={() => setCancelId(null)}
+        onConfirm={(reason) => {
           if (cancelId) {
-            cancelMutation.mutate(cancelId)
+            cancelMutation.mutate({ id: cancelId, reason })
           }
         }}
       />

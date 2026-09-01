@@ -28,8 +28,11 @@ export function confirmAppointment(id: string) {
   return apiClient<AppointmentResponse>(`/api/v1/appointments/${id}/confirm`, { method: 'POST' })
 }
 
-export function cancelAppointment(id: string) {
-  return apiClient<AppointmentResponse>(`/api/v1/appointments/${id}/cancel`, { method: 'POST' })
+export function cancelAppointment(id: string, reason?: string) {
+  return apiClient<AppointmentResponse>(`/api/v1/appointments/${id}/cancel`, {
+    method: 'POST',
+    body: { reason },
+  })
 }
 
 export function completeAppointment(id: string) {

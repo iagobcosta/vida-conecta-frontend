@@ -11,4 +11,6 @@ export const queryKeys = {
   myAvailability: ['availability', 'me'] as const,
   doctorAvailability: (doctorId: string) => ['availability', doctorId] as const,
   doctorSlots: (doctorId: string) => ['slots', doctorId] as const,
+  notifications: ['notifications'] as const,
+  unreadNotifications: ['notifications', 'unread'] as const,
 }

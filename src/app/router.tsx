@@ -12,6 +12,7 @@ import { EhrPage } from '../features/ehr/pages/EhrPage'
 import { PrescriptionsPage } from '../features/prescription/pages/PrescriptionsPage'
 import { ConsultationPage } from '../features/video/pages/ConsultationPage'
 import { HomePage } from '../features/home/pages/HomePage'
+import { NotificationsPage } from '../features/notification/pages/NotificationsPage'
 
 export function AppRoutes() {
   return (
@@ -27,6 +28,7 @@ export function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Navigate to="/inicio" replace />} />
           <Route path="/inicio" element={<HomePage />} />
+          <Route path="/notificacoes" element={<NotificationsPage />} />
           <Route path="/agenda" element={<AgendaPage />} />
           <Route element={<RequireRole roles={['PACIENTE']} />}>
             <Route path="/agenda/nova" element={<NewAppointmentPage />} />

@@ -92,6 +92,13 @@ export type AppointmentResponse = {
   joinOpensAt: string
   joinClosesAt: string
   canJoinNow: boolean
+  cancelReason: string | null
+  cancelledBy: string | null
+  cancelledByName: string | null
+}
+
+export type CancelAppointmentRequest = {
+  reason?: string
 }
 
 export type CreateAppointmentRequest = {
@@ -181,4 +188,30 @@ export type EhrAuditResponse = {
   appointmentId: string | null
   action: string
   accessedAt: string
+}
+
+export type NotificationType =
+  | 'APPOINTMENT_SCHEDULED'
+  | 'APPOINTMENT_CONFIRMED'
+  | 'APPOINTMENT_CANCELLED'
+  | 'APPOINTMENT_COMPLETED'
+  | 'PRESCRIPTION_ISSUED'
+  | 'CONSENT_GRANTED'
+  | 'CONSENT_REVOKED'
+  | 'EHR_NOTE_ADDED'
+
+export type NotificationResponse = {
+  id: string
+  type: NotificationType
+  title: string
+  body: string
+  appointmentId: string | null
+  actionPath: string | null
+  actionLabel: string | null
+  readAt: string | null
+  createdAt: string
+}
+
+export type UnreadCountResponse = {
+  unreadCount: number
 }

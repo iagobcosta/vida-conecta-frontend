@@ -4,6 +4,7 @@ import { Button } from '../components/Button'
 import { cn } from '../lib/cn'
 import { roleLabel } from '../lib/formatters'
 import { useAuthStore } from '../stores/authStore'
+import { NotificationBell } from '../features/notification/components/NotificationBell'
 
 const patientLinks = [
   { to: '/inicio', label: 'Início' },
@@ -61,6 +62,7 @@ export function AppLayout() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <NotificationBell />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium text-slate-900">{user?.fullName ?? user?.email}</p>
               <p className="text-xs text-slate-500">{user ? roleLabel(user.role) : ''}</p>

@@ -1,4 +1,4 @@
-import type { AppointmentStatus, ConsentScope, DayOfWeek, Role } from '../types/api'
+import type { AppointmentStatus, ConsentScope, DayOfWeek, NotificationType, Role } from '../types/api'
 
 const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
   dateStyle: 'short',
@@ -132,4 +132,18 @@ export function joinWindowLabel(
     return `A sala abre ${formatRelativeTime(joinOpensAt)}`
   }
   return `A janela encerrou ${formatRelativeTime(joinClosesAt)}`
+}
+
+export function notificationTypeLabel(type: NotificationType) {
+  const labels: Record<NotificationType, string> = {
+    APPOINTMENT_SCHEDULED: 'Nova consulta',
+    APPOINTMENT_CONFIRMED: 'Confirmação',
+    APPOINTMENT_CANCELLED: 'Cancelamento',
+    APPOINTMENT_COMPLETED: 'Consulta concluída',
+    PRESCRIPTION_ISSUED: 'Receita',
+    CONSENT_GRANTED: 'Consentimento',
+    CONSENT_REVOKED: 'Consentimento',
+    EHR_NOTE_ADDED: 'Prontuário',
+  }
+  return labels[type]
 }

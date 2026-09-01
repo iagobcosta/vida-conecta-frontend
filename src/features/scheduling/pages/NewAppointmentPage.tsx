@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Alert } from '../../../components/Alert'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
@@ -34,6 +34,8 @@ function groupSlots(slots: AvailableSlotResponse[]) {
 
 export function NewAppointmentPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const preferredDoctorId = searchParams.get('medico')
   const queryClient = useQueryClient()
   const pushToast = useToastStore((state) => state.push)
   const [search, setSearch] = useState('')
@@ -41,6 +43,16 @@ export function NewAppointmentPage() {
   const [selectedSlot, setSelectedSlot] = useState<AvailableSlotResponse | null>(null)
 
   const doctorsQuery = useQuery({ queryKey: queryKeys.doctors, queryFn: listDoctors })
+
+  useEffect(() => {
+    if (!preferredDoctorId || selectedDoctor || !doctorsQuery.data) {
+      return
+    }
+    const found = doctorsQuery.data.find((doctor) => doctor.id === preferredDoctorId)
+    if (found) {
+      setSelectedDoctor(found)
+    }
+  }, [preferredDoctorId, doctorsQuery.data, selectedDoctor])
   const availabilityQuery = useQuery({
     queryKey: queryKeys.doctorAvailability(selectedDoctor?.id ?? ''),
     queryFn: () => listDoctorAvailability(selectedDoctor?.id as string),
@@ -71,6 +83,7 @@ export function NewAppointmentPage() {
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.appointments })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.unreadNotifications })
       pushToast('Consulta agendada. Aguarde a confirmação do médico.')
       navigate('/agenda')
     },

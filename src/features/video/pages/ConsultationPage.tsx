@@ -65,6 +65,7 @@ export function ConsultationPage() {
     onSuccess: async () => {
       setNote('')
       await queryClient.invalidateQueries({ queryKey: ['ehr'] })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.unreadNotifications })
       pushToast('Evolução registrada.')
     },
   })
@@ -80,6 +81,7 @@ export function ConsultationPage() {
       setDosage('')
       setInstructions('')
       await queryClient.invalidateQueries({ queryKey: queryKeys.prescriptions })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.unreadNotifications })
       pushToast('Receita emitida.')
     },
   })
@@ -88,6 +90,7 @@ export function ConsultationPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.appointments })
       await queryClient.invalidateQueries({ queryKey: queryKeys.appointment(appointmentId) })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.unreadNotifications })
       pushToast('Consulta concluída.')
     },
   })

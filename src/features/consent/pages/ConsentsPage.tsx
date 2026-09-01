@@ -66,6 +66,7 @@ export function ConsentsPage() {
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.consents })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.unreadNotifications })
       form.reset({ doctorId: '', scope: 'DOCTOR', appointmentId: '', expiresAt: '' })
       pushToast('Consentimento concedido.')
     },
@@ -76,6 +77,7 @@ export function ConsentsPage() {
     onSuccess: async () => {
       setRevokeId(null)
       await queryClient.invalidateQueries({ queryKey: queryKeys.consents })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.unreadNotifications })
       pushToast('Consentimento revogado. O médico deixa de ver o histórico compartilhado.', 'info')
     },
   })

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Alert } from '../../../components/Alert'
+import { Badge } from '../../../components/Badge'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { EmptyState } from '../../../components/EmptyState'
@@ -14,6 +15,7 @@ import { formatDateTime } from '../../../lib/formatters'
 import { queryKeys } from '../../../services/queryKeys'
 import { fetchBootstrapToken, inviteDoctor, listDoctorInvites, listManagedDoctors } from '../../auth/api'
 import { inviteDoctorSchema, type InviteDoctorFormValues } from '../../auth/schema'
+import { DoctorEnabledButton } from '../components/DoctorEnabledButton'
 import type { DoctorInviteResponse } from '../../../types/api'
 
 const statusLabel: Record<DoctorInviteResponse['status'], string> = {
@@ -42,6 +44,7 @@ export function DoctorsAdminPage() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.adminInvites }),
         queryClient.invalidateQueries({ queryKey: queryKeys.adminDoctors }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.adminInsights }),
       ])
     },
   })
@@ -109,19 +112,25 @@ export function DoctorsAdminPage() {
         </div>
       )}
 
-      <h2 className="mt-8 text-base font-semibold text-slate-900">Médicos ativos</h2>
+      <h2 className="mt-8 text-base font-semibold text-slate-900">Médicos</h2>
       {doctorsQuery.isPending ? <Spinner className="mt-3" label="Carregando médicos" /> : null}
       {doctorsQuery.data?.length === 0 ? (
         <EmptyState className="mt-3" title="Nenhum médico cadastrado" description="Quando o convite for aceito, o médico aparece nesta lista." />
       ) : (
         <div className="mt-3 space-y-3">
           {doctorsQuery.data?.map((doctor) => (
-            <Card key={doctor.id}>
-              <p className="font-medium text-slate-900">{doctor.fullName}</p>
-              <p className="mt-1 text-sm text-slate-600">
-                {doctor.specialty} · CRM {doctor.crm}
-              </p>
-              {doctor.email ? <p className="mt-1 text-xs text-slate-500">{doctor.email}</p> : null}
+            <Card key={doctor.id} className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium text-slate-900">{doctor.fullName}</p>
+                  <Badge tone={doctor.enabled ? 'success' : 'neutral'}>{doctor.enabled ? 'Ativo' : 'Desativado'}</Badge>
+                </div>
+                <p className="mt-1 text-sm text-slate-600">
+                  {doctor.specialty} · CRM {doctor.crm}
+                </p>
+                {doctor.email ? <p className="mt-1 text-xs text-slate-500">{doctor.email}</p> : null}
+              </div>
+              <DoctorEnabledButton doctor={doctor} />
             </Card>
           ))}
         </div>

@@ -47,7 +47,7 @@ Copie `.env.example` para `.env` se quiser apontar para outra API:
 - Públicas: `/login`, `/cadastro` (somente paciente), `/cadastro/admin`, `/cadastro/medico` (convite)
 - Paciente: `/inicio`, `/notificacoes`, `/agenda`, `/agenda/nova` (busca o médico e escolhe um horário livre da agenda), `/consentimentos`, `/prontuario`, `/receitas`, `/consulta/:appointmentId`
 - Médico: `/inicio`, `/notificacoes`, `/agenda` (confirmar/cancelar/concluir), `/horarios` (períodos semanais de atendimento), `/prontuario`, `/receitas`, `/consulta/:appointmentId` (evolução e receita)
-- Admin: `/inicio`, `/medicos` (convite por e-mail), `/notificacoes`
+- Admin: `/inicio` (painel com insights, gráficos e ativar/desativar médicos), `/medicos` (convite por e-mail), `/notificacoes`
 
 O cadastro público é só de paciente. O admin convida o médico pelo nome e e-mail; o médico termina o cadastro no link do convite.
 

@@ -14,6 +14,7 @@ import { queryKeys } from '../../../services/queryKeys'
 import { useAuthStore } from '../../../stores/authStore'
 import { listAppointments } from '../../scheduling/api'
 import { listConsents } from '../../consent/api'
+import { AdminDashboardPage } from '../../admin/pages/AdminDashboardPage'
 import type { AppointmentResponse } from '../../../types/api'
 
 function nextAppointment(appointments: AppointmentResponse[]) {
@@ -52,18 +53,26 @@ export function HomePage() {
     [consentsQuery.data],
   )
 
+  if (isAdmin) {
+    return (
+      <div>
+        {nextBootstrapToken ? (
+          <Alert className="mb-6" variant="success">
+            Guarde o próximo token de cadastro de admin:{' '}
+            <span className="break-all font-mono text-sm">{nextBootstrapToken}</span>
+          </Alert>
+        ) : null}
+        <AdminDashboardPage />
+      </div>
+    )
+  }
+
   return (
     <div>
       <PageHeader
         title={`Olá, ${user?.fullName?.split(' ')[0] ?? 'bem-vindo'}`}
         description={`${roleLabel(user?.role ?? 'PACIENTE')} · ${user?.email}`}
       />
-
-      {nextBootstrapToken ? (
-        <Alert className="mb-6" variant="success">
-          Guarde o próximo token de cadastro de admin: <span className="break-all font-mono text-sm">{nextBootstrapToken}</span>
-        </Alert>
-      ) : null}
 
       {user?.cpf ? (
         <Alert className="mb-6">
@@ -74,34 +83,6 @@ export function HomePage() {
       {appointmentsQuery.isPending ? <Spinner label="Carregando início" /> : null}
       {appointmentsQuery.isError ? <Alert variant="error">{errorMessage(appointmentsQuery.error)}</Alert> : null}
 
-      {isAdmin ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <p className="text-sm font-medium text-slate-500">Equipe médica</p>
-            <p className="mt-2 text-sm text-slate-600">
-              Convide médicos pelo nome e e-mail. Eles recebem o link para concluir o cadastro.
-            </p>
-            <Link to="/medicos" className="mt-4 inline-block">
-              <Button size="sm">Gerenciar médicos</Button>
-            </Link>
-          </Card>
-          <Card>
-            <p className="text-sm font-medium text-slate-500">Atalhos</p>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li>
-                <Link to="/medicos" className="font-medium text-teal-800 hover:underline">
-                  Convidar médico
-                </Link>
-              </li>
-              <li>
-                <Link to="/notificacoes" className="font-medium text-teal-800 hover:underline">
-                  Notificações
-                </Link>
-              </li>
-            </ul>
-          </Card>
-        </div>
-      ) : (
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <p className="text-sm font-medium text-slate-500">Próxima consulta</p>
@@ -202,7 +183,6 @@ export function HomePage() {
           ) : null}
         </Card>
       </div>
-      )}
     </div>
   )
 }

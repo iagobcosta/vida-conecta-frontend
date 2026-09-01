@@ -17,4 +17,5 @@ export const queryKeys = {
   adminDoctors: ['admin', 'doctors'] as const,
   adminInvites: ['admin', 'invites'] as const,
   adminBootstrapToken: ['admin', 'bootstrap-token'] as const,
+  adminInsights: ['admin', 'insights'] as const,
 }

@@ -23,7 +23,7 @@ const doctorLinks = [
 ]
 
 const adminLinks = [
-  { to: '/inicio', label: 'Início' },
+  { to: '/inicio', label: 'Painel' },
   { to: '/medicos', label: 'Médicos' },
 ]
 

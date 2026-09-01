@@ -85,6 +85,50 @@ export type ManagedDoctorResponse = {
   fullName: string
   crm: string
   specialty: string
+  enabled: boolean
+}
+
+export type AdminInsightsResponse = {
+  generatedAt: string
+  clinicTimeZone: string
+  census: {
+    patients: number
+    doctorsActive: number
+    doctorsInactive: number
+    admins: number
+    pendingInvites: number
+  }
+  appointments: {
+    total: number
+    scheduled: number
+    confirmed: number
+    cancelled: number
+    inProgress: number
+    completed: number
+    today: number
+    upcoming: number
+    last7Days: number
+    previous7Days: number
+    cancellationRate: number
+  }
+  last30Days: DailyAppointmentPoint[]
+  bySpecialty: SpecialtyShare[]
+}
+
+export type DailyAppointmentPoint = {
+  date: string
+  created: number
+  scheduled: number
+  confirmed: number
+  cancelled: number
+  inProgress: number
+  completed: number
+}
+
+export type SpecialtyShare = {
+  specialty: string
+  doctors: number
+  appointments: number
 }
 
 export type BootstrapTokenResponse = {

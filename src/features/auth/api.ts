@@ -53,3 +53,10 @@ export function listDoctorInvites() {
 export function listManagedDoctors() {
   return apiClient<ManagedDoctorResponse[]>('/api/v1/admin/doctors')
 }
+
+export function setDoctorEnabled(doctorId: string, enabled: boolean) {
+  return apiClient<ManagedDoctorResponse>(`/api/v1/admin/doctors/${doctorId}/enabled`, {
+    method: 'PATCH',
+    body: { enabled },
+  })
+}

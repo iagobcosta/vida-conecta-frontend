@@ -1,0 +1,21 @@
+export const queryKeys = {
+  me: ['auth', 'me'] as const,
+  doctors: ['doctors'] as const,
+  appointments: ['appointments'] as const,
+  appointment: (id: string) => ['appointments', id] as const,
+  consents: ['consents'] as const,
+  ehr: (patientId: string, appointmentId?: string) =>
+    appointmentId ? (['ehr', patientId, appointmentId] as const) : (['ehr', patientId] as const),
+  prescriptions: ['prescriptions'] as const,
+  ehrAudit: (patientId: string) => ['ehr-audit', patientId] as const,
+  myAvailability: ['availability', 'me'] as const,
+  doctorAvailability: (doctorId: string) => ['availability', doctorId] as const,
+  doctorSlots: (doctorId: string) => ['slots', doctorId] as const,
+  notifications: ['notifications'] as const,
+  unreadNotifications: ['notifications', 'unread'] as const,
+  doctorInvite: (token: string) => ['doctor-invite', token] as const,
+  adminDoctors: ['admin', 'doctors'] as const,
+  adminInvites: ['admin', 'invites'] as const,
+  adminBootstrapToken: ['admin', 'bootstrap-token'] as const,
+  adminInsights: ['admin', 'insights'] as const,
+}

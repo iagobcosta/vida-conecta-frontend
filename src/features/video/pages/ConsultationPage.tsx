@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Alert } from '../../../components/Alert'
 import { AppointmentStatusBadge } from '../../../components/Badge'
@@ -18,7 +18,7 @@ import { getAppointment, completeAppointment } from '../../scheduling/api'
 import { createClinicalNote, listClinicalNotes } from '../../ehr/api'
 import { createPrescription, listPrescriptions } from '../../prescription/api'
 import { requestVideoToken } from '../api'
-import type { VideoTokenResponse } from '../../../types/api'
+import { JitsiMeeting } from '../components/JitsiMeeting'
 
 export function ConsultationPage() {
   const { appointmentId = '' } = useParams()
@@ -26,10 +26,8 @@ export function ConsultationPage() {
   const isDoctor = user?.role === 'MEDICO'
   const queryClient = useQueryClient()
   const pushToast = useToastStore((state) => state.push)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const [previewError, setPreviewError] = useState<string | null>(null)
-  const [previewOn, setPreviewOn] = useState(false)
+  const [inCall, setInCall] = useState(false)
+  const [roomName, setRoomName] = useState<string | null>(null)
   const [note, setNote] = useState('')
   const [medication, setMedication] = useState('')
   const [dosage, setDosage] = useState('')
@@ -56,10 +54,15 @@ export function ConsultationPage() {
     queryFn: listPrescriptions,
   })
 
-  const tokenMutation = useMutation({
+  const joinMutation = useMutation({
     mutationFn: () => requestVideoToken(appointmentId),
-    onSuccess: () => pushToast('Token da sala emitido (mock).'),
+    onSuccess: (token) => {
+      setRoomName(token.roomName)
+      setInCall(true)
+      pushToast('Entrando na videochamada.')
+    },
   })
+
   const noteMutation = useMutation({
     mutationFn: () => createClinicalNote(patientId as string, { appointmentId, content: note.trim() }),
     onSuccess: async () => {
@@ -95,47 +98,22 @@ export function ConsultationPage() {
     },
   })
 
-  async function startPreview() {
-    setPreviewError(null)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-      }
-      setPreviewOn(true)
-    } catch {
-      setPreviewError('Não foi possível acessar câmera e microfone neste navegador.')
-    }
+  function leaveCall() {
+    setInCall(false)
+    setRoomName(null)
   }
-
-  function stopPreview() {
-    streamRef.current?.getTracks().forEach((track) => track.stop())
-    streamRef.current = null
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
-    }
-    setPreviewOn(false)
-  }
-
-  useEffect(() => {
-    return () => {
-      streamRef.current?.getTracks().forEach((track) => track.stop())
-      streamRef.current = null
-    }
-  }, [])
 
   const relatedPrescriptions =
     prescriptionsQuery.data?.filter((item) => item.appointmentId === appointmentId) ?? []
   const notesForbidden = isApiError(notesQuery.error) && notesQuery.error.status === 403
-  const token = tokenMutation.data
+  const displayName = user?.fullName?.trim() || user?.email || 'Participante'
+  const canJoin = Boolean(appointment?.canJoinNow)
 
   return (
     <div>
       <PageHeader
         title="Sala da consulta"
-        description="O vídeo real (LiveKit) virá depois. Neste MVP o backend emite um token mock e você pode ligar o preview local."
+        description="Videochamada via Jitsi Meet. A sala só abre com a consulta confirmada e dentro da janela do horário."
         actions={
           <Link to="/agenda">
             <Button variant="secondary">Voltar à agenda</Button>
@@ -190,39 +168,40 @@ export function ConsultationPage() {
           <p className="mt-1 text-sm text-slate-600">
             A sala abre se a consulta estiver confirmada e dentro da janela (10 minutos antes até o fim do horário).
           </p>
-          <div className="mt-4 overflow-hidden rounded-lg bg-slate-900">
-            <video
-              ref={videoRef}
-              className="aspect-video w-full bg-slate-900 object-cover"
-              muted
-              playsInline
-              aria-label="Pré-visualização local da câmera"
-            />
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {previewOn ? (
-              <Button variant="secondary" onClick={stopPreview}>
-                Encerrar preview
+
+          {inCall && roomName ? (
+            <div className="mt-4 space-y-3">
+              <JitsiMeeting roomName={roomName} displayName={displayName} onLeft={leaveCall} />
+              <Button variant="secondary" onClick={leaveCall}>
+                Sair da videochamada
               </Button>
-            ) : (
-              <Button variant="secondary" onClick={() => void startPreview()}>
-                Ligar câmera local
-              </Button>
-            )}
-            <Button onClick={() => tokenMutation.mutate()} disabled={tokenMutation.isPending || Boolean(appointment && !appointment.canJoinNow)}>
-              {tokenMutation.isPending ? 'Pedindo token…' : 'Pedir token da sala'}
-            </Button>
-          </div>
-          {previewError ? <Alert variant="error" className="mt-3">{previewError}</Alert> : null}
-          {tokenMutation.isError ? (
+            </div>
+          ) : (
+            <div className="mt-4">
+              <div className="flex aspect-video min-h-[220px] items-center justify-center rounded-lg bg-slate-900 px-4 text-center text-sm text-slate-300">
+                {canJoin
+                  ? 'Quando estiver pronto, entre na sala. Médico e paciente usam o mesmo identificador da consulta.'
+                  : 'A videochamada fica disponível após a confirmação e na janela do horário marcado.'}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  onClick={() => joinMutation.mutate()}
+                  disabled={joinMutation.isPending || !canJoin}
+                >
+                  {joinMutation.isPending ? 'Autorizando sala…' : 'Entrar na videochamada'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {joinMutation.isError ? (
             <Alert variant="warning" className="mt-3">
-              {errorMessage(tokenMutation.error)}{' '}
-              {isApiError(tokenMutation.error) && tokenMutation.error.status === 403
+              {errorMessage(joinMutation.error)}{' '}
+              {isApiError(joinMutation.error) && joinMutation.error.status === 403
                 ? 'Confirme a consulta e tente na janela do horário marcado.'
                 : null}
             </Alert>
           ) : null}
-          {token ? <VideoTokenPanel token={token} /> : null}
         </Card>
 
         <div className="space-y-6">
@@ -353,24 +332,5 @@ export function ConsultationPage() {
         </div>
       </div>
     </div>
-  )
-}
-
-function VideoTokenPanel({ token }: { token: VideoTokenResponse }) {
-  return (
-    <dl className="mt-4 space-y-2 rounded-lg bg-slate-50 p-3 text-sm">
-      <div>
-        <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Sala</dt>
-        <dd className="font-mono text-slate-800">{token.roomName}</dd>
-      </div>
-      <div>
-        <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">URL</dt>
-        <dd className="break-all text-slate-800">{token.url || 'mock://local'}</dd>
-      </div>
-      <div>
-        <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Token (mock)</dt>
-        <dd className="break-all font-mono text-xs text-slate-700">{token.token}</dd>
-      </div>
-    </dl>
   )
 }

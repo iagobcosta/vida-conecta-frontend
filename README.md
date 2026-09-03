@@ -41,6 +41,7 @@ Copie `.env.example` para `.env` se quiser apontar para outra API:
 | Variável | Dev | Produção (Vercel) |
 | --- | --- | --- |
 | `VITE_API_URL` | vazio (usa o proxy) | origem da API, **sem barra no final**, ex. `https://api.exemplo.com` |
+| `VITE_JITSI_DOMAIN` | `meet.jit.si` (padrão) | domínio do Jitsi self-hosted ou público, **sem protocolo** |
 
 `VITE_*` entra no bundle no **build**. Depois de mudar a variável na Vercel, faça um novo deploy.
 
@@ -84,7 +85,11 @@ O médico precisa informar um motivo ao cancelar. O paciente recebe a notificaç
 
 ## Sala de consulta
 
-`POST /api/v1/video/appointments/{id}/token` devolve token **mock**. A tela mostra sala/status e pode abrir preview local (`getUserMedia`). A API só libera o token se a consulta estiver confirmada e dentro da janela (10 minutos antes até o fim do horário).
+A videochamada usa o **Jitsi Meet** (IFrame API) embutido em `/consulta/:appointmentId`.
+
+Antes de abrir o iframe, o front chama `POST /api/v1/video/appointments/{id}/token` (autorização da janela de consulta). A sala Jitsi usa o `roomName` estável devolvido pela API (`appointment-{id}`), para médico e paciente entrarem na mesma reunião.
+
+Domínio configurável via `VITE_JITSI_DOMAIN` (padrão `meet.jit.si`). Não há JWT do Jitsi no frontend: o controle de acesso à consulta continua no backend Vida Conecta.
 
 ## Scripts
 

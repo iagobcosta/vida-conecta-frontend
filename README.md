@@ -1,5 +1,8 @@
 # Vida Conecta — Frontend
 
+[![CI](https://github.com/iagobcosta/vida-conecta-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/iagobcosta/vida-conecta-frontend/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/iagobcosta/vida-conecta-frontend/actions/workflows/codeql.yml/badge.svg)](https://github.com/iagobcosta/vida-conecta-frontend/actions/workflows/codeql.yml)
+
 Interface web do MVP de telemedicina: autenticação JWT, agenda, consentimento (LGPD), prontuário, prescrição digital e sala de consulta com token mock (sem LiveKit/SFU nesta entrega).
 
 ## Stack
@@ -89,10 +92,28 @@ O médico precisa informar um motivo ao cancelar. O paciente recebe a notificaç
 ## Scripts
 
 ```bash
-npm run dev      # desenvolvimento
-npm run build    # checagem TypeScript + bundle
-npm run preview  # servir o build
-npm run lint     # oxlint
+npm run dev            # desenvolvimento
+npm run build          # checagem TypeScript + bundle
+npm run preview        # servir o build
+npm run lint            # oxlint
+npm run test            # testes (Vitest)
+npm run test:watch      # testes em modo watch
+npm run test:coverage   # testes + relatório de cobertura
 ```
 
 Node 22 (`engines` e `.nvmrc`). A Vercel usa essa versão no build.
+
+## Integração contínua
+
+O workflow [`ci.yml`](.github/workflows/ci.yml) roda em toda `push`/`pull request` para `main`:
+
+- **Lint** — `oxlint`
+- **Type check** — `tsc -b` (sem emissão, só validação de tipos)
+- **Testes** — Vitest + Testing Library, com relatório de cobertura publicado como artefato
+- **Auditoria de dependências** — `npm audit` (falha em vulnerabilidades altas/críticas)
+- **Build** — `vite build`, com o `dist/` publicado como artefato (depende de lint, type check e testes passarem)
+- **Tamanho do bundle** — compara o bundle comprimido do PR contra a base e comenta a diferença
+
+O workflow [`codeql.yml`](.github/workflows/codeql.yml) roda uma análise estática de segurança (CodeQL) em cada push/PR para `main` e semanalmente. O [`dependabot.yml`](.github/dependabot.yml) mantém dependências npm e as próprias GitHub Actions atualizadas com PRs automáticos semanais.
+
+O deploy continua a cargo da integração nativa da Vercel com o Git (veja acima); o Actions cuida só da validação.

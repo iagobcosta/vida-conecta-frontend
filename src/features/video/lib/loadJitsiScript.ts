@@ -1,4 +1,4 @@
-import { jitsiExternalApiUrl } from './jitsiConfig'
+import { jitsiExternalApiUrl, getJitsiProtocol } from './jitsiConfig'
 
 type JitsiExternalApiConstructor = new (
   domain: string,
@@ -10,6 +10,7 @@ export type JitsiMeetExternalApi = {
   removeListener: (event: string, listener: (...args: unknown[]) => void) => void
   dispose: () => void
   executeCommand: (command: string, ...args: unknown[]) => void
+  getIFrame?: () => HTMLIFrameElement | undefined
 }
 
 declare global {
@@ -48,7 +49,13 @@ export function loadJitsiScript(domain: string): Promise<void> {
     }
     script.onerror = () => {
       scriptPromises.delete(src)
-      reject(new Error(`Não foi possível carregar o script do Jitsi (${src}).`))
+      script.remove()
+      const protocol = getJitsiProtocol(domain)
+      const hint =
+        protocol === 'https'
+          ? ` Abra ${protocol}://${domain} neste mesmo navegador/perfil, aceite o certificado e tente de novo.`
+          : ''
+      reject(new Error(`Não foi possível carregar o script do Jitsi (${src}).${hint}`))
     }
     document.body.appendChild(script)
   })

@@ -85,11 +85,20 @@ O médico precisa informar um motivo ao cancelar. O paciente recebe a notificaç
 
 ## Sala de consulta
 
-A videochamada usa o **Jitsi Meet** (IFrame API) embutido em `/consulta/:appointmentId`.
+A videochamada usa o **Jitsi Meet**. Antes de entrar, o front chama `POST /api/v1/video/appointments/{id}/token` (autorização da janela). A resposta traz um token **mock** — esperado: o backend só autoriza quem pode entrar; a mídia não passa pelo Spring.
 
-Antes de abrir o iframe, o front chama `POST /api/v1/video/appointments/{id}/token` (autorização da janela de consulta). A sala Jitsi usa o `roomName` estável devolvido pela API (`appointment-{id}`), para médico e paciente entrarem na mesma reunião.
+A sala Jitsi usa o `roomName` estável (`appointment-{id}`).
 
-Domínio configurável via `VITE_JITSI_DOMAIN` (padrão `meet.jit.si`). Não há JWT do Jitsi no frontend: o controle de acesso à consulta continua no backend Vida Conecta.
+### Desenvolvimento local (recomendado)
+
+1. No backend: `./scripts/setup-jitsi.sh` (sobe Jitsi em https://localhost:8443).
+2. Abra https://localhost:8443 uma vez e **aceite o certificado** autoassinado.
+3. No frontend: `VITE_JITSI_DOMAIN=localhost:8443` (veja `.env.example`) e `npm run dev`.
+4. Médico e paciente entram em `/consulta/:id` → **Entrar na videochamada**.
+
+### `meet.jit.si` (público)
+
+Exige login de moderador e OAuth costuma falhar no iframe; o app oferece **Abrir sala em nova aba**. Para demo com cliente, prefira o Jitsi self-hosted.
 
 ## Scripts
 

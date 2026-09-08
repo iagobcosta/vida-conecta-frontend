@@ -19,6 +19,7 @@ import { createClinicalNote, listClinicalNotes } from '../../ehr/api'
 import { createPrescription, listPrescriptions } from '../../prescription/api'
 import { requestVideoToken } from '../api'
 import { JitsiMeeting } from '../components/JitsiMeeting'
+import { getJitsiDomain, isPublicMeetJitsi, jitsiRoomUrl } from '../lib/jitsiConfig'
 
 export function ConsultationPage() {
   const { appointmentId = '' } = useParams()
@@ -32,6 +33,8 @@ export function ConsultationPage() {
   const [medication, setMedication] = useState('')
   const [dosage, setDosage] = useState('')
   const [instructions, setInstructions] = useState('')
+  const jitsiDomain = getJitsiDomain()
+  const needsExternalTab = isPublicMeetJitsi(jitsiDomain)
 
   const appointmentQuery = useQuery({
     queryKey: queryKeys.appointment(appointmentId),
@@ -59,7 +62,11 @@ export function ConsultationPage() {
     onSuccess: (token) => {
       setRoomName(token.roomName)
       setInCall(true)
-      pushToast('Entrando na videochamada.')
+      pushToast(
+        needsExternalTab
+          ? 'Sala autorizada. Abra em nova aba se o pop-up foi bloqueado.'
+          : 'Entrando na videochamada.',
+      )
     },
   })
 
@@ -101,6 +108,23 @@ export function ConsultationPage() {
   function leaveCall() {
     setInCall(false)
     setRoomName(null)
+  }
+
+  function openRoomInNewTab(name: string) {
+    window.open(jitsiRoomUrl(name), '_blank', 'noopener,noreferrer')
+  }
+
+  async function handleJoinClick() {
+    // Abre a aba no gesto do usuário (antes do await) para não cair no bloqueio de pop-up.
+    const popup = needsExternalTab ? window.open('about:blank', '_blank') : null
+    try {
+      const token = await joinMutation.mutateAsync()
+      if (popup && !popup.closed) {
+        popup.location.href = jitsiRoomUrl(token.roomName)
+      }
+    } catch {
+      popup?.close()
+    }
   }
 
   const relatedPrescriptions =
@@ -162,49 +186,85 @@ export function ConsultationPage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <h2 className="text-base font-semibold text-slate-900">Videochamada</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            A sala abre se a consulta estiver confirmada e dentro da janela (10 minutos antes até o fim do horário).
-          </p>
+      <Card className="mb-6">
+        <h2 className="text-base font-semibold text-slate-900">Videochamada</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          A sala abre se a consulta estiver confirmada e dentro da janela (10 minutos antes até o fim do
+          horário). O token da API (mock) só autoriza a entrada; a mídia roda no Jitsi ({jitsiDomain}).
+        </p>
 
-          {inCall && roomName ? (
-            <div className="mt-4 space-y-3">
-              <JitsiMeeting roomName={roomName} displayName={displayName} onLeft={leaveCall} />
+        {needsExternalTab ? (
+          <Alert variant="warning" className="mt-3">
+            O domínio público <code className="text-xs">{jitsiDomain}</code> exige login de moderador
+            (Google/GitHub/Facebook) e esse login costuma falhar dentro do iframe — por isso a tela
+            fica preta. Para testar agora: autorize a sala e use{' '}
+            <strong>Abrir sala em nova aba</strong>. Médico e paciente devem usar o mesmo nome de sala.
+          </Alert>
+        ) : (
+          <Alert variant="warning" className="mt-3">
+            Em <strong>cada</strong> navegador/perfil (médico e paciente), abra{' '}
+            <a
+              className="font-medium text-teal-800 underline"
+              href={`https://${jitsiDomain}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              https://{jitsiDomain}
+            </a>{' '}
+            e aceite o certificado autoassinado. Se só o médico aceitou, o paciente vê erro ao carregar
+            o script do Jitsi.
+          </Alert>
+        )}
+
+        {inCall && roomName ? (
+          <div className="mt-4 space-y-3">
+            <p className="text-xs text-slate-500">
+              Sala: <code>{roomName}</code>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => openRoomInNewTab(roomName)}>Abrir sala em nova aba</Button>
               <Button variant="secondary" onClick={leaveCall}>
-                Sair da videochamada
+                Encerrar na página
               </Button>
             </div>
-          ) : (
-            <div className="mt-4">
+            {!needsExternalTab ? (
+              <JitsiMeeting roomName={roomName} displayName={displayName} onLeft={leaveCall} />
+            ) : (
               <div className="flex aspect-video min-h-[220px] items-center justify-center rounded-lg bg-slate-900 px-4 text-center text-sm text-slate-300">
-                {canJoin
-                  ? 'Quando estiver pronto, entre na sala. Médico e paciente usam o mesmo identificador da consulta.'
-                  : 'A videochamada fica disponível após a confirmação e na janela do horário marcado.'}
+                Embed desabilitado neste domínio. Abra a sala em nova aba (um participante faz login
+                como moderador; o outro entra em seguida na mesma URL).
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  onClick={() => joinMutation.mutate()}
-                  disabled={joinMutation.isPending || !canJoin}
-                >
-                  {joinMutation.isPending ? 'Autorizando sala…' : 'Entrar na videochamada'}
-                </Button>
-              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mt-4">
+            <div className="flex aspect-video min-h-[220px] items-center justify-center rounded-lg bg-slate-900 px-4 text-center text-sm text-slate-300">
+              {canJoin
+                ? 'Quando estiver pronto, entre na sala. Médico e paciente usam o mesmo identificador da consulta.'
+                : 'A videochamada fica disponível após a confirmação e na janela do horário marcado.'}
             </div>
-          )}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                onClick={() => void handleJoinClick()}
+                disabled={joinMutation.isPending || !canJoin}
+              >
+                {joinMutation.isPending ? 'Autorizando sala…' : 'Entrar na videochamada'}
+              </Button>
+            </div>
+          </div>
+        )}
 
-          {joinMutation.isError ? (
-            <Alert variant="warning" className="mt-3">
-              {errorMessage(joinMutation.error)}{' '}
-              {isApiError(joinMutation.error) && joinMutation.error.status === 403
-                ? 'Confirme a consulta e tente na janela do horário marcado.'
-                : null}
-            </Alert>
-          ) : null}
-        </Card>
+        {joinMutation.isError ? (
+          <Alert variant="warning" className="mt-3">
+            {errorMessage(joinMutation.error)}{' '}
+            {isApiError(joinMutation.error) && joinMutation.error.status === 403
+              ? 'Confirme a consulta e tente na janela do horário marcado.'
+              : null}
+          </Alert>
+        ) : null}
+      </Card>
 
-        <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-base font-semibold text-slate-900">Prontuário</h2>
@@ -329,7 +389,6 @@ export function ConsultationPage() {
               </form>
             ) : null}
           </Card>
-        </div>
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 # Vida Conecta — Frontend
 
-Interface web do MVP de telemedicina: autenticação JWT, agenda, consentimento (LGPD), prontuário, prescrição digital e sala de consulta com token mock (sem LiveKit/SFU nesta entrega).
+Interface web do MVP de telemedicina: autenticação JWT, agenda, consentimento (LGPD), prontuário, prescrição digital e sala de consulta com token mock. A integração com LiveKit/SFU e a validação de cadastro por e-mail não fazem parte desta entrega.
 
 ## Stack
 
@@ -77,7 +77,7 @@ npm run preview
 - Médico: `/inicio`, `/notificacoes`, `/agenda` (confirmar/cancelar/concluir), `/horarios` (períodos semanais de atendimento), `/prontuario`, `/receitas`, `/consulta/:appointmentId` (evolução e receita)
 - Admin: `/inicio` (painel com insights, gráficos e ativar/desativar médicos), `/medicos` (convite por e-mail), `/notificacoes`
 
-O cadastro público é só de paciente. O admin convida o médico pelo nome e e-mail; o médico termina o cadastro no link do convite.
+O cadastro público é só de paciente e ainda não possui validação por e-mail. O admin convida o médico pelo nome e e-mail; o médico termina o cadastro no link do convite.
 
 Na tela de nova consulta o paciente busca por nome, especialidade ou CRM, seleciona o médico e vê os encaixes livres dos próximos 14 dias. Sem horários cadastrados pelo médico, a agenda aparece vazia.
 

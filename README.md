@@ -1,6 +1,6 @@
 # Vida Conecta — Frontend
 
-Interface web do MVP de telemedicina: autenticação JWT, agenda, consentimento (LGPD), prontuário, prescrição digital e sala de consulta com token mock. A integração com LiveKit/SFU e a validação de cadastro por e-mail não fazem parte desta entrega.
+Interface web do MVP de telemedicina: autenticação JWT, agenda, consentimento (LGPD), prontuário, prescrição digital e sala de consulta funcional com Jitsi Meet. A validação de cadastro por e-mail não faz parte desta entrega; o token retornado pelo backend continua sendo mock e serve para autorizar a entrada.
 
 ## Stack
 
